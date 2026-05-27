@@ -10,6 +10,12 @@ interface TaskItemProps {
   task: TaskRow
   isFocused: boolean
   onClick: () => void
+  isEditing?: boolean
+  editValue?: string
+  editRef?: React.RefObject<HTMLInputElement | null>
+  onEditChange?: (val: string) => void
+  onEditSave?: () => void
+  onEditCancel?: () => void
 }
 
 // Parseia o título e colore palavras que começam com @
@@ -48,7 +54,7 @@ function getMeta(task: TaskRow): string | null {
   return null
 }
 
-export function TaskItem({ task, isFocused, onClick }: TaskItemProps) {
+export function TaskItem({ task, isFocused, onClick, isEditing, editValue, editRef, onEditChange, onEditSave, onEditCancel }: TaskItemProps) {
   const meta = getMeta(task)
 
   return (
@@ -88,23 +94,51 @@ export function TaskItem({ task, isFocused, onClick }: TaskItemProps) {
         {task.done ? '✓' : '○'}
       </span>
 
-      {/* Título */}
-      <span
-        style={{
-          flex: 1,
-          fontSize: '14px',
-          lineHeight: '20px',
-          ...(task.done
-            ? {
-                textDecoration: 'line-through',
-                textDecorationColor: 'var(--text-muted)',
-                color: 'var(--text-tertiary)',
-              }
-            : { color: 'var(--text-primary)' }),
-        }}
-      >
-        {renderTitle(task.title)}
-      </span>
+      {/* Título / input de edição */}
+      {isEditing ? (
+        <input
+          ref={editRef}
+          value={editValue ?? ''}
+          onChange={e => onEditChange?.(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') { e.preventDefault(); onEditSave?.() }
+            if (e.key === 'Escape') { e.preventDefault(); onEditCancel?.() }
+          }}
+          onBlur={onEditSave}
+          style={{
+            flex: 1,
+            fontSize: '14px',
+            lineHeight: '20px',
+            color: 'var(--text-primary)',
+            background: 'transparent',
+            border: 'none',
+            outline: 'none',
+            fontFamily: 'inherit',
+            padding: 0,
+            caretColor: 'var(--accent)',
+            width: '100%',
+          }}
+          autoComplete="off"
+          spellCheck={false}
+        />
+      ) : (
+        <span
+          style={{
+            flex: 1,
+            fontSize: '14px',
+            lineHeight: '20px',
+            ...(task.done
+              ? {
+                  textDecoration: 'line-through',
+                  textDecorationColor: 'var(--text-muted)',
+                  color: 'var(--text-tertiary)',
+                }
+              : { color: 'var(--text-primary)' }),
+          }}
+        >
+          {renderTitle(task.title)}
+        </span>
+      )}
 
       {/* Meta direita */}
       {meta && (

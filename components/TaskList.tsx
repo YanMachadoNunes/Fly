@@ -8,7 +8,7 @@
 //   Del  →  deleta tarefa focada
 //   ⌘K   →  foca o input (via store.focusInputTrigger)
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { TaskItem } from './TaskItem'
 import { useFlyStore } from '@/lib/store'
 import type { TaskRow } from '@/app/actions'
@@ -18,14 +18,36 @@ interface TaskListProps {
   onToggle: (task: TaskRow) => void
   onDelete: (id: string) => void
   onCreate: (text: string) => void
+  onEdit: (id: string, title: string) => void
 }
 
-export function TaskList({ tasks, onToggle, onDelete, onCreate }: TaskListProps) {
+export function TaskList({ tasks, onToggle, onDelete, onCreate, onEdit }: TaskListProps) {
   const [focusedIndex, setFocusedIndex] = useState(-1)
   const [inputValue, setInputValue]     = useState('')
   const [inputFocused, setInputFocused] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [editingId, setEditingId]       = useState<string | null>(null)
+  const [editValue, setEditValue]       = useState('')
+  const inputRef    = useRef<HTMLInputElement>(null)
+  const editInputRef = useRef<HTMLInputElement>(null)
   const { focusInputTrigger } = useFlyStore()
+
+  const handleEditSave = useCallback(() => {
+    if (editingId && editValue.trim()) {
+      onEdit(editingId, editValue.trim())
+    }
+    setEditingId(null)
+    setEditValue('')
+  }, [editingId, editValue, onEdit])
+
+  const handleEditCancel = useCallback(() => {
+    setEditingId(null)
+    setEditValue('')
+  }, [])
+
+  // Foca o input de edição assim que entra no modo edição
+  useEffect(() => {
+    if (editingId) editInputRef.current?.focus()
+  }, [editingId])
 
   // Ordena: pendentes primeiro, concluídas no fim
   const sorted = [...tasks].sort((a, b) => {
@@ -44,9 +66,8 @@ export function TaskList({ tasks, onToggle, onDelete, onCreate }: TaskListProps)
   // Navegação global por teclado (só ativa fora do input)
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Ignora quando o input está focado
       if (document.activeElement === inputRef.current) return
-      // Ignora ⌘K (tratado pelo Providers)
+      if (document.activeElement === editInputRef.current) return
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') return
 
       if (e.key === 'ArrowDown') {
@@ -72,6 +93,14 @@ export function TaskList({ tasks, onToggle, onDelete, onCreate }: TaskListProps)
       if (e.key === ' ' && focusedIndex >= 0 && focusedIndex < sorted.length) {
         e.preventDefault()
         onToggle(sorted[focusedIndex])
+        return
+      }
+
+      if (e.key === 'e' && focusedIndex >= 0 && focusedIndex < sorted.length && !editingId) {
+        e.preventDefault()
+        const task = sorted[focusedIndex]
+        setEditingId(task.id)
+        setEditValue(task.title)
         return
       }
 
@@ -129,6 +158,12 @@ export function TaskList({ tasks, onToggle, onDelete, onCreate }: TaskListProps)
             setFocusedIndex(index)
             onToggle(task)
           }}
+          isEditing={editingId === task.id}
+          editValue={editValue}
+          editRef={editInputRef}
+          onEditChange={setEditValue}
+          onEditSave={handleEditSave}
+          onEditCancel={handleEditCancel}
         />
       ))}
 
@@ -228,6 +263,11 @@ export function TaskList({ tasks, onToggle, onDelete, onCreate }: TaskListProps)
             <span style={{ color: 'var(--text-secondary)' }}>␣</span>
             {'  '}
             <span style={{ color: 'var(--text-muted)' }}>concluir</span>
+          </span>
+          <span>
+            <span style={{ color: 'var(--text-secondary)' }}>E</span>
+            {'  '}
+            <span style={{ color: 'var(--text-muted)' }}>editar</span>
           </span>
           <span style={{ marginLeft: 'auto', color: 'var(--text-muted)' }}>
             fly v0.1

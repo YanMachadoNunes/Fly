@@ -58,6 +58,17 @@ export async function deleteTask(id: string): Promise<void> {
   revalidatePath('/inbox')
 }
 
+/** Edita o título de uma tarefa */
+export async function updateTask(id: string, title: string): Promise<TaskRow> {
+  const task = await prisma.task.update({
+    where: { id },
+    data: { title },
+  })
+  revalidatePath('/')
+  revalidatePath('/inbox')
+  return task
+}
+
 /** Move uma tarefa para outro dia (Caixa de Entrada → hoje/futuro) */
 export async function rescheduleTask(id: string, dayOf: Date): Promise<TaskRow> {
   const task = await prisma.task.update({

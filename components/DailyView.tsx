@@ -8,7 +8,7 @@
 import { useOptimistic, useTransition } from 'react'
 import { DailyHeader } from './DailyHeader'
 import { TaskList } from './TaskList'
-import { toggleTask, deleteTask, createTask, type TaskRow } from '@/app/actions'
+import { toggleTask, deleteTask, createTask, updateTask, type TaskRow } from '@/app/actions'
 import { parseTask } from '@/lib/nlp'
 
 interface DailyViewProps {
@@ -20,6 +20,7 @@ type OptimisticAction =
   | { type: 'toggle'; id: string; done: boolean }
   | { type: 'delete'; id: string }
   | { type: 'add';    task: TaskRow }
+  | { type: 'edit';   id: string; title: string }
 
 function applyOptimistic(state: TaskRow[], action: OptimisticAction): TaskRow[] {
   switch (action.type) {
@@ -33,6 +34,8 @@ function applyOptimistic(state: TaskRow[], action: OptimisticAction): TaskRow[] 
       return state.filter(t => t.id !== action.id)
     case 'add':
       return [...state, action.task]
+    case 'edit':
+      return state.map(t => t.id === action.id ? { ...t, title: action.title } : t)
   }
 }
 
@@ -78,6 +81,13 @@ export function DailyView({ initialTasks, inboxCount }: DailyViewProps) {
     })
   }
 
+  function handleEdit(id: string, title: string) {
+    startTransition(async () => {
+      dispatch({ type: 'edit', id, title })
+      await updateTask(id, title)
+    })
+  }
+
   return (
     <>
       <DailyHeader inboxCount={inboxCount} completed={completed} total={total} />
@@ -86,6 +96,7 @@ export function DailyView({ initialTasks, inboxCount }: DailyViewProps) {
         onToggle={handleToggle}
         onDelete={handleDelete}
         onCreate={handleCreate}
+        onEdit={handleEdit}
       />
     </>
   )
