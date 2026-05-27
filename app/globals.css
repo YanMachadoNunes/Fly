@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════
+   Fly — Terminal Aesthetic
+   Paleta: #0f0f11 base, violet-400 como único acento.
+   Tipografia: JetBrains Mono 400 apenas.
+   ═══════════════════════════════════════════════════ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg:              #16161a;
+  --text-primary:    #e4e4e7;
+  --text-secondary:  #71717a;
+  --text-tertiary:   #52525b;
+  --text-muted:      #3f3f46;
+  --border:          #22222a;
+  --accent:          #a78bfa;
+  --accent-dim:      #7c6cd1;
+  --dot-red:         #7c4f55;
+  --dot-yellow:      #7a6a42;
+  --dot-green:       #4d7052;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Mapeia variáveis como tokens Tailwind (para usar bg-bg, text-accent, etc.) */
+@theme {
+  --color-bg:            var(--bg);
+  --color-text-primary:  var(--text-primary);
+  --color-accent:        var(--accent);
+  --color-border-fly:    var(--border);
+  --font-mono: var(--font-jetbrains), 'SF Mono', Menlo, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Reset base ─────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  /* JetBrains Mono injetado via --font-jetbrains (next/font) */
+  font-family: var(--font-jetbrains), 'SF Mono', Menlo, monospace;
+  font-weight: 400;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color: var(--text-primary);
+  min-height: 100dvh;
+}
+
+/* Força mono e 400 em todos os elementos — sem exceção */
+*, input, button, textarea, select {
+  font-family: var(--font-jetbrains), 'SF Mono', Menlo, monospace;
+  font-weight: 400;
+}
+
+/* Seleção de texto */
+::selection {
+  background-color: rgba(167, 139, 250, 0.18);
+  color: var(--text-primary);
+}
+
+/* Scrollbar discreta */
+::-webkit-scrollbar       { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 2px; }
+
+/* ── Animação de cursor ──────────────────────────── */
+
+@keyframes blink {
+  0%, 49.9% { opacity: 1; }
+  50%, 100%  { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: blink 1.2s step-end infinite;
+}
+
+/* ── Utilitário: risco de tarefa concluída ──────── */
+
+.task-done {
+  text-decoration: line-through;
+  text-decoration-color: var(--text-muted);
+  color: var(--text-tertiary);
+}
+
+/* ── Input de nova tarefa ────────────────────────── */
+
+.new-task-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  caret-color: var(--accent);
+  width: 100%;
+}
+
+.new-task-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
 }

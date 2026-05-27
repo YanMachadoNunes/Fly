@@ -1,0 +1,26 @@
+// Fly — Schema de tarefas
+// dayOf: dia ao qual a tarefa pertence (diferente de createdAt)
+// Isso permite realocar tarefas sem perder o histórico de criação
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  done        Boolean   @default(false)
+  dueDate     DateTime? // hora específica dentro do dia (opcional)
+  dayOf       DateTime  // dia do calendário ao qual pertence
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([dayOf])
+  @@index([done, dayOf])
+}
